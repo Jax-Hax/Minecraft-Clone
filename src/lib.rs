@@ -1,6 +1,6 @@
 use engine::Mesh;
 use winit::{event_loop::ControlFlow, event::{WindowEvent, VirtualKeyCode, ElementState, Event, KeyboardInput, DeviceEvent}};
-use crate::engine::{State, Vertex};
+use crate::engine::State;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 

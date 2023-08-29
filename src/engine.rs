@@ -517,11 +517,11 @@ impl State {
                         face_vertices = get_mesh_texture_and_pos(face, &block.block_type, pos);
                     }
                     vertices.extend_from_slice(&face_vertices);
+                    indices.push(base_index + 3);
+                    indices.push(base_index + 2);
                     indices.push(base_index);
                     indices.push(base_index + 1);
                     indices.push(base_index + 2);
-                    indices.push(base_index + 2);
-                    indices.push(base_index + 1);
                     indices.push(base_index + 3);
                 }
             }
@@ -562,7 +562,7 @@ fn get_mesh_texture_and_pos(face: Face, block_type: &BlockType, pos: [f32; 3]) -
     vertices_array
 }
 fn get_texture_coords(index: usize) -> [[f32; 2]; 4] {
-    const NUM_SPRITES_IN_TEXTURE: usize = 256; //must be perfect square
+    const NUM_SPRITES_IN_TEXTURE: usize = 16; //must be perfect square
     const SPRITE_SIZE: f32 = 1.0 / (NUM_SPRITES_IN_TEXTURE as f32);
 
     let row = index / NUM_SPRITES_IN_TEXTURE;
@@ -572,7 +572,12 @@ fn get_texture_coords(index: usize) -> [[f32; 2]; 4] {
     let max_x = min_x + SPRITE_SIZE;
     let min_y = row as f32 * SPRITE_SIZE;
     let max_y = min_y + SPRITE_SIZE;
-
+    println!("{:#?}", [
+        [min_x, min_y],
+        [max_x, min_y],
+        [max_x, max_y],
+        [min_x, max_y],
+    ]);
     [
         [min_x, min_y],
         [max_x, min_y],
