@@ -43,9 +43,9 @@ pub struct Mesh{
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
-    position: [f32; 3],
-    tex_coords: [f32; 2],
+pub struct Vertex {
+    pub position: [f32; 3],
+    pub tex_coords: [f32; 2],
 }
 
 impl Vertex {
@@ -459,8 +459,9 @@ impl State {
             });
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(0, &self.texture_bind_group, &[]);
+            render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
             for chunk in chunks {
-                render_pass.set_vertex_buffer(1, chunk.vertex_buffer.slice(..)); // try switching slot to 0
+                render_pass.set_vertex_buffer(0, chunk.vertex_buffer.slice(..)); // try switching slot to 0
                 render_pass.set_index_buffer(chunk.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
                 render_pass.draw_indexed(0..chunk.num_elements, 0, 0..1);
             }
@@ -470,5 +471,18 @@ impl State {
         output.present();
 
         Ok(())
+    }
+    pub fn build_mesh(&self,vertices: &Vec<Vertex>, indices: &[u16]) -> Mesh{
+        let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            contents: bytemuck::cast_slice(&vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer"),
+            contents: bytemuck::cast_slice(indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        Mesh { vertex_buffer, index_buffer, num_elements: indices.len() as u32 }
     }
 }
