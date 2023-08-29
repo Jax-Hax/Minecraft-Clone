@@ -9,7 +9,18 @@ mod texture;
 mod camera;
 pub struct Block{
     position: [i32; 3],
-    block_type: u16,
+    block_type: BlockType,
+    /*left_filled: bool,
+    right_filled: bool,
+    top_filled: bool,
+    bottom_filled: bool,
+    front_fille*/
+}
+pub enum BlockType{
+    Air,
+    Water,
+    Grass,
+    Stone
 }
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {

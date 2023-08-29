@@ -12,9 +12,7 @@ use winit::{
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-use crate::{
-    camera,texture, Block,
-};
+use crate::{camera, texture, Block, BlockType};
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -36,10 +34,10 @@ impl CameraUniform {
         self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
     }
 }
-pub struct Mesh{
+pub struct Mesh {
     vertex_buffer: Buffer,
     index_buffer: Buffer,
-    num_elements: u32
+    num_elements: u32,
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -203,7 +201,8 @@ impl State {
 
         let diffuse_bytes = include_bytes!("cube-diffuse.jpg");
         let diffuse_texture =
-            texture::Texture::from_bytes(&device, &queue, diffuse_bytes, "cube-diffuse.jpg").unwrap();
+            texture::Texture::from_bytes(&device, &queue, diffuse_bytes, "cube-diffuse.jpg")
+                .unwrap();
 
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -463,7 +462,8 @@ impl State {
             for chunk in chunks {
                 println!("{}", chunk.num_elements);
                 render_pass.set_vertex_buffer(0, chunk.vertex_buffer.slice(..));
-                render_pass.set_index_buffer(chunk.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+                render_pass
+                    .set_index_buffer(chunk.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
                 render_pass.draw_indexed(0..chunk.num_elements, 0, 0..1);
             }
         }
@@ -473,21 +473,89 @@ impl State {
 
         Ok(())
     }
-    pub fn build_mesh(&self,vertices: &Vec<Vertex>, indices: &Vec<u32>) -> Mesh{
-        let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(&vertices),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-        let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(indices),
-            usage: wgpu::BufferUsages::INDEX,
-        });
-        Mesh { vertex_buffer, index_buffer, num_elements: indices.len() as u32 }
+    pub fn build_mesh(&self, vertices: &Vec<Vertex>, indices: &Vec<u32>) -> Mesh {
+        let vertex_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(&vertices),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let index_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+        Mesh {
+            vertex_buffer,
+            index_buffer,
+            num_elements: indices.len() as u32,
+        }
     }
-    pub fn build_chunk(blocks: Vec<Vec<Vec<Block>>>) {
-        
+    pub fn build_chunk(blocks: &mut Vec<Vec<Vec<Block>>>) {
+        let mut vertices: Vec<Vertex> = vec![];
+        let mut indices: Vec<u32> = vec![];
+        for (x, column) in blocks.iter().enumerate() {
+            for (y, row) in column.iter().enumerate() {
+                for (z, block) in row.iter().enumerate() {
+                    if let BlockType::Air = block.block_type {
+                        break;
+                    }
+                    let mut base_index = vertices.len() as u32;
+                    let face_vertices: [Vertex; 4];
+                    let pos = [
+                        block.position[0] as f32 + x as f32,
+                        block.position[1] as f32 + y as f32,
+                        block.position[2] as f32 + z as f32,
+                    ];
+                    if y + 1 >= column.len() {
+                        let face = Face::Top;
+                        let neighbor = &blocks[x][y + 1][z];
+                        if let BlockType::Air = neighbor.block_type {
+                            face_vertices = get_mesh_texture_and_pos(face, block.block_type, pos);
+                        }
+                        vertices.extend_from_slice(&face_vertices);
+                        indices.push(base_index);
+                        indices.push(base_index + 1);
+                        indices.push(base_index + 2);
+                        indices.push(base_index + 2);
+                        indices.push(base_index + 1);
+                        indices.push(base_index + 3);
+                        base_index += 4;
+                    }
+                }
+            }
+        }
+        //better technique, start in the middle and work your way out?
     }
-    const NUM_TILES: u16 = 1;
+}
+fn get_mesh_texture_and_pos(face: Face, block_type: BlockType, pos: [f32; 3]) -> [Vertex; 4] {
+    //vertices
+    /*let  */
+    /*
+    let vertex = Vertex {
+                            position: vertex_position,
+                            tex_coords: tex_coords,
+                        };
+                         */
+    let vertices = match face {
+        Top => [pos[0] + 1.0, pos[1] + 1.0, pos[2] + 1.0],
+    };
+    match block.block_type {
+        /*let tex_coords = match block.block_type {
+                            BlockType::Grass => [0.0, 0.0],  // Adjust accordingly
+                            BlockType::Stone => [0.0, 1.0],  // Adjust accordingly
+                            // ...
+                        }; */
+    }
+}
+enum Face {
+    Top,
+    Bottom,
+    Left,
+    Right,
+    Back,
+    Front,
 }
