@@ -461,7 +461,8 @@ impl State {
             render_pass.set_bind_group(0, &self.texture_bind_group, &[]);
             render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
             for chunk in chunks {
-                render_pass.set_vertex_buffer(0, chunk.vertex_buffer.slice(..)); // try switching slot to 0
+                println!("{}", chunk.num_elements);
+                render_pass.set_vertex_buffer(0, chunk.vertex_buffer.slice(..));
                 render_pass.set_index_buffer(chunk.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
                 render_pass.draw_indexed(0..chunk.num_elements, 0, 0..1);
             }
@@ -472,7 +473,7 @@ impl State {
 
         Ok(())
     }
-    pub fn build_mesh(&self,vertices: &Vec<Vertex>, indices: &[u16]) -> Mesh{
+    pub fn build_mesh(&self,vertices: &Vec<Vertex>, indices: &Vec<u32>) -> Mesh{
         let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::cast_slice(&vertices),

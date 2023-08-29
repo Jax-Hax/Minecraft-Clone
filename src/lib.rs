@@ -38,9 +38,9 @@ pub async fn run() {
         }, // E
     ];
 
-    const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4, /* padding */ 0];
+    let indices: Vec<u32> = vec![0, 1, 4, 1, 2, 4, 2, 3, 4, /* padding */ 0];
 
-    let mesh = state.build_mesh(&vertices, INDICES);
+    let mesh = state.build_mesh(&vertices, &indices);
     chunks.push(mesh);
 
     let mut last_render_time = instant::Instant::now();
