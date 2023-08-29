@@ -199,9 +199,9 @@ impl State {
 
         surface.configure(&device, &config);
 
-        let diffuse_bytes = include_bytes!("cube-diffuse.jpg");
+        let diffuse_bytes = include_bytes!("texture_atlas.png");
         let diffuse_texture =
-            texture::Texture::from_bytes(&device, &queue, diffuse_bytes, "cube-diffuse.jpg")
+            texture::Texture::from_bytes(&device, &queue, diffuse_bytes, "texture_atlas.png")
                 .unwrap();
 
         let texture_bind_group_layout =
@@ -460,7 +460,6 @@ impl State {
             render_pass.set_bind_group(0, &self.texture_bind_group, &[]);
             render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
             for chunk in chunks {
-                println!("{}", chunk.num_elements);
                 render_pass.set_vertex_buffer(0, chunk.vertex_buffer.slice(..));
                 render_pass
                     .set_index_buffer(chunk.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
@@ -473,7 +472,7 @@ impl State {
 
         Ok(())
     }
-    pub fn build_mesh(&self, vertices: &Vec<Vertex>, indices: &Vec<u32>) -> Mesh {
+    pub fn build_mesh(&self, vertices: Vec<Vertex>, indices: Vec<u32>) -> Mesh {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -485,7 +484,7 @@ impl State {
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(indices),
+                contents: bytemuck::cast_slice(&indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
         Mesh {
@@ -494,7 +493,7 @@ impl State {
             num_elements: indices.len() as u32,
         }
     }
-    pub fn build_chunk(blocks: &mut Vec<Vec<Vec<Block>>>) {
+    pub fn build_chunk(&self, blocks: &mut Vec<Vec<Vec<Block>>>) -> Mesh {
         let mut vertices: Vec<Vertex> = vec![];
         let mut indices: Vec<u32> = vec![];
         for (x, column) in blocks.iter().enumerate() {
@@ -503,53 +502,88 @@ impl State {
                     if let BlockType::Air = block.block_type {
                         break;
                     }
-                    let mut base_index = vertices.len() as u32;
-                    let face_vertices: [Vertex; 4];
+                    let base_index = vertices.len() as u32;
+                    let mut face_vertices: Vec<Vertex> = vec![];
                     let pos = [
                         block.position[0] as f32 + x as f32,
                         block.position[1] as f32 + y as f32,
                         block.position[2] as f32 + z as f32,
                     ];
-                    if y + 1 >= column.len() {
+                    let face = Face::Top;
+                    if y + 1 < column.len() { //>= ?
                         let face = Face::Top;
                         let neighbor = &blocks[x][y + 1][z];
                         if let BlockType::Air = neighbor.block_type {
-                            face_vertices = get_mesh_texture_and_pos(face, block.block_type, pos);
+                            face_vertices = get_mesh_texture_and_pos(face, &block.block_type, pos);
                         }
-                        vertices.extend_from_slice(&face_vertices);
+                        
+                    }
+                    else {
+                        face_vertices = get_mesh_texture_and_pos(face, &block.block_type, pos);
+                    }
+                    vertices.extend_from_slice(&face_vertices);
                         indices.push(base_index);
                         indices.push(base_index + 1);
                         indices.push(base_index + 2);
                         indices.push(base_index + 2);
                         indices.push(base_index + 1);
                         indices.push(base_index + 3);
-                        base_index += 4;
-                    }
                 }
             }
         }
+        self.build_mesh(vertices, indices)
         //better technique, start in the middle and work your way out?
     }
 }
-fn get_mesh_texture_and_pos(face: Face, block_type: BlockType, pos: [f32; 3]) -> [Vertex; 4] {
-    //vertices
-    /*let  */
-    /*
-    let vertex = Vertex {
-                            position: vertex_position,
-                            tex_coords: tex_coords,
-                        };
-                         */
+fn get_mesh_texture_and_pos(face: Face, block_type: &BlockType, pos: [f32; 3]) -> Vec<Vertex> {
     let vertices = match face {
-        Top => [pos[0] + 1.0, pos[1] + 1.0, pos[2] + 1.0],
+        Face::Top => [
+            [pos[0] - 0.5, pos[1] + 0.5, pos[2] - 0.5],
+            [pos[0] + 0.5, pos[1] + 0.5, pos[2] + 0.5],
+            [pos[0] + 0.5, pos[1] + 0.5, pos[2] - 0.5],
+            [pos[0] - 0.5, pos[1] + 0.5, pos[2] + 0.5],
+        ],
+        _ => todo!(),
     };
-    match block.block_type {
-        /*let tex_coords = match block.block_type {
-                            BlockType::Grass => [0.0, 0.0],  // Adjust accordingly
-                            BlockType::Stone => [0.0, 1.0],  // Adjust accordingly
-                            // ...
-                        }; */
+    println!("HIIII {:#?}", vertices);
+    let index = match block_type {
+        BlockType::Grass => match face {
+            Face::Left | Face::Right | Face::Back | Face::Front => 3,
+            Face::Top => 0,
+            Face::Bottom => 4,
+        },
+        _ => todo!(),
+    };
+
+    let texture_coords = get_texture_coords(index);
+    let mut vertices_array = vec![];
+    for i in 0..4 {
+        vertices_array.push(Vertex {
+            position: vertices[i],
+            tex_coords: texture_coords[i],
+        })
     }
+
+    vertices_array
+}
+fn get_texture_coords(index: usize) -> [[f32; 2]; 4] {
+    const NUM_SPRITES_IN_TEXTURE: usize = 256; //must be perfect square
+    const SPRITE_SIZE: f32 = 1.0 / (NUM_SPRITES_IN_TEXTURE as f32);
+
+    let row = index / NUM_SPRITES_IN_TEXTURE;
+    let col = index % NUM_SPRITES_IN_TEXTURE;
+
+    let min_x = col as f32 * SPRITE_SIZE;
+    let max_x = min_x + SPRITE_SIZE;
+    let min_y = row as f32 * SPRITE_SIZE;
+    let max_y = min_y + SPRITE_SIZE;
+
+    [
+        [min_x, min_y],
+        [max_x, min_y],
+        [max_x, max_y],
+        [min_x, max_y],
+    ]
 }
 enum Face {
     Top,
