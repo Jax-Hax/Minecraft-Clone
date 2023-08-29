@@ -8,7 +8,6 @@ mod engine;
 mod texture;
 mod camera;
 pub struct Block{
-    position: [i32; 3],
     block_type: BlockType,
     /*left_filled: bool,
     right_filled: bool,
@@ -31,22 +30,72 @@ pub async fn run() {
     let mut test_blocks: Vec<Vec<Vec<Block>>> = vec![
         vec![
             vec![
-                Block { position: [0, 0, 0], block_type: BlockType::Grass },
-                Block { position: [0, 0, 1], block_type: BlockType::Stone },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
             ],
             vec![
-                Block { position: [0, 1, 0], block_type: BlockType::Grass },
-                Block { position: [0, 1, 1], block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
             ],
         ],
         vec![
             vec![
-                Block { position: [0, 0, 0], block_type: BlockType::Grass },
-                Block { position: [0, 0, 1], block_type: BlockType::Stone },
+                Block { block_type: BlockType::Grass },
+                Block { block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
             ],
             vec![
-                Block { position: [0, 1, 0], block_type: BlockType::Grass },
-                Block { position: [0, 1, 1], block_type: BlockType::Grass },
+                Block { block_type: BlockType::Grass },
+                Block { block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+        ],
+        vec![
+            vec![
+                Block { block_type: BlockType::Grass },
+                Block { block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block { block_type: BlockType::Grass },
+                Block { block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
             ],
         ],
     ];

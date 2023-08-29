@@ -504,30 +504,25 @@ impl State {
                     }
                     let base_index = vertices.len() as u32;
                     let mut face_vertices: Vec<Vertex> = vec![];
-                    let pos = [
-                        block.position[0] as f32 + x as f32,
-                        block.position[1] as f32 + y as f32,
-                        block.position[2] as f32 + z as f32,
-                    ];
+                    let pos = [x as f32, y as f32, z as f32];
                     let face = Face::Top;
-                    if y + 1 < column.len() { //>= ?
+                    if y + 1 < column.len() {
+                        //>= ?
                         let face = Face::Top;
                         let neighbor = &blocks[x][y + 1][z];
                         if let BlockType::Air = neighbor.block_type {
                             face_vertices = get_mesh_texture_and_pos(face, &block.block_type, pos);
                         }
-                        
-                    }
-                    else {
+                    } else {
                         face_vertices = get_mesh_texture_and_pos(face, &block.block_type, pos);
                     }
                     vertices.extend_from_slice(&face_vertices);
-                        indices.push(base_index);
-                        indices.push(base_index + 1);
-                        indices.push(base_index + 2);
-                        indices.push(base_index + 2);
-                        indices.push(base_index + 1);
-                        indices.push(base_index + 3);
+                    indices.push(base_index);
+                    indices.push(base_index + 1);
+                    indices.push(base_index + 2);
+                    indices.push(base_index + 2);
+                    indices.push(base_index + 1);
+                    indices.push(base_index + 3);
                 }
             }
         }
@@ -549,7 +544,7 @@ fn get_mesh_texture_and_pos(face: Face, block_type: &BlockType, pos: [f32; 3]) -
     let index = match block_type {
         BlockType::Grass => match face {
             Face::Left | Face::Right | Face::Back | Face::Front => 3,
-            Face::Top => 0,
+            Face::Top => 1,
             Face::Bottom => 4,
         },
         _ => todo!(),
