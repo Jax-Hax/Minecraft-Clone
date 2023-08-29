@@ -7,6 +7,10 @@ use wasm_bindgen::prelude::*;
 mod engine;
 mod texture;
 mod camera;
+pub struct Block{
+    position: [i32; 3],
+    block_type: u16,
+}
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
 

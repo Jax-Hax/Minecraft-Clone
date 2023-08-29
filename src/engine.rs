@@ -13,7 +13,7 @@ use winit::{
 use wasm_bindgen::prelude::*;
 
 use crate::{
-    camera,texture,
+    camera,texture, Block,
 };
 
 #[repr(C)]
@@ -486,4 +486,8 @@ impl State {
         });
         Mesh { vertex_buffer, index_buffer, num_elements: indices.len() as u32 }
     }
+    pub fn build_chunk(blocks: Vec<Vec<Vec<Block>>>) {
+        
+    }
+    const NUM_TILES: u16 = 1;
 }
