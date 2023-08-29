@@ -36,7 +36,7 @@ impl CameraUniform {
         self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into();
     }
 }
-struct Mesh{
+pub struct Mesh{
     vertex_buffer: Buffer,
     index_buffer: Buffer,
     num_elements: u32
@@ -457,9 +457,10 @@ impl State {
                     stencil_ops: None,
                 }),
             });
+            render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(0, &self.texture_bind_group, &[]);
             for chunk in chunks {
-                render_pass.set_vertex_buffer(1, chunk.vertex_buffer.slice(..));
+                render_pass.set_vertex_buffer(1, chunk.vertex_buffer.slice(..)); // try switching slot to 0
                 render_pass.set_index_buffer(chunk.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
                 render_pass.draw_indexed(0..chunk.num_elements, 0, 0..1);
             }

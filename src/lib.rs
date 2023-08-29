@@ -1,11 +1,10 @@
+use engine::Mesh;
 use winit::{event_loop::ControlFlow, event::{WindowEvent, VirtualKeyCode, ElementState, Event, KeyboardInput, DeviceEvent}};
-use cgmath::prelude::*;
-use crate::engine::{State, Instance, InstanceContainer};
+use crate::engine::State;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 mod engine;
-mod model;
 mod texture;
 mod camera;
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
@@ -14,33 +13,7 @@ pub async fn run() {
     // State::new uses async code, so we're going to wait for it to finish
     let (mut state,event_loop) = State::new().await;
 
-    //add models
-    const SPACE_BETWEEN: f32 = 3.0;
-    const NUM_INSTANCES_PER_ROW: usize = 10;
-    let instances = (0..NUM_INSTANCES_PER_ROW)
-            .flat_map(|z| {
-                (0..NUM_INSTANCES_PER_ROW).map(move |x| {
-                    let x = SPACE_BETWEEN * (x as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
-                    let z = SPACE_BETWEEN * (z as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
-
-                    let position = cgmath::Vector3 { x, y: 0.0, z };
-
-                    let rotation = if position.is_zero() {
-                        cgmath::Quaternion::from_axis_angle(
-                            cgmath::Vector3::unit_z(),
-                            cgmath::Deg(0.0),
-                        )
-                    } else {
-                        cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0))
-                    };
-
-                    Instance { position, rotation }
-                })
-            })
-            .collect::<Vec<_>>();
-    let mut entities: Vec<InstanceContainer> = vec![];
-    let instances = state.create_dynamic_instances("cube.obj",instances).await;
-    entities.push(instances);
+    let mut chunks: Vec<Mesh> = vec![];
     let mut last_render_time = instant::Instant::now();
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
@@ -83,13 +56,8 @@ pub async fn run() {
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                for instance in &mut entities[0].instances {
-                    instance.position[0] += 0.01;
-                }
                 state.update(dt);
-                state.update_instances(&entities[0]);
-
-                match state.render(&entities) {
+                match state.render(&chunks) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.size),
