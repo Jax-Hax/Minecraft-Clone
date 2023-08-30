@@ -579,10 +579,10 @@ fn get_texture_coords(index: usize) -> [[f32; 2]; 4] {
         [min_x, max_y],
     ]);
     [
-        [min_x, min_y],
-        [max_x, min_y],
-        [max_x, max_y],
         [min_x, max_y],
+        [max_x, min_y],
+        [min_x, min_y],
+        [max_x, max_y],
     ]
 }
 enum Face {
