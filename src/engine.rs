@@ -12,7 +12,7 @@ use winit::{
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-use crate::{camera, texture, Block, BlockType};
+use crate::{camera, texture, Block, BlockType, Chunk};
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -419,7 +419,7 @@ impl State {
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
     }
-    pub fn render(&mut self, chunks: &Vec<Mesh>) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self, chunks: &[Chunk; 256]) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -460,10 +460,10 @@ impl State {
             render_pass.set_bind_group(0, &self.texture_bind_group, &[]);
             render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
             for chunk in chunks {
-                render_pass.set_vertex_buffer(0, chunk.vertex_buffer.slice(..));
+                render_pass.set_vertex_buffer(0, chunk.mesh.vertex_buffer.slice(..));
                 render_pass
-                    .set_index_buffer(chunk.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-                render_pass.draw_indexed(0..chunk.num_elements, 0, 0..1);
+                    .set_index_buffer(chunk.mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+                render_pass.draw_indexed(0..chunk.mesh.num_elements, 0, 0..1);
             }
         }
 
