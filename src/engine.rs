@@ -513,6 +513,7 @@ impl State {
                                 face,
                                 &block.block_type,
                                 pos,
+                                false,
                             ));
                         }
                     } else {
@@ -520,6 +521,7 @@ impl State {
                             face,
                             &block.block_type,
                             pos,
+                            false,
                         ));
                     }
                     indices.push(base_index + 3);
@@ -539,6 +541,7 @@ impl State {
                                 face,
                                 &block.block_type,
                                 pos,
+                                false,
                             ));
                         }
                     } else {
@@ -546,6 +549,7 @@ impl State {
                             face,
                             &block.block_type,
                             pos,
+                            false,
                         ));
                     }
                     indices.push(base_index + 3);
@@ -561,17 +565,39 @@ impl State {
                     if x > 0 {
                         let neighbor = &blocks[x - 1][y][z];
                         if let BlockType::Air = neighbor.block_type {
+                            //check if there is a grass block above and make it dirt if so
+                            let grass_above: bool = if y + 1 < column.len() {
+                                if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                    true
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            };
                             vertices.extend_from_slice(&get_mesh_texture_and_pos(
                                 face,
                                 &block.block_type,
                                 pos,
+                                grass_above,
                             ));
                         }
                     } else {
+                        //check if there is a grass block above and make it dirt if so
+                        let grass_above: bool = if y + 1 < column.len() {
+                            if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        };
                         vertices.extend_from_slice(&get_mesh_texture_and_pos(
                             face,
                             &block.block_type,
                             pos,
+                            grass_above,
                         ));
                     }
                     indices.push(base_index + 3);
@@ -587,17 +613,39 @@ impl State {
                     if x + 1 < blocks.len() {
                         let neighbor = &blocks[x + 1][y][z];
                         if let BlockType::Air = neighbor.block_type {
+                            //check if there is a grass block above and make it dirt if so
+                            let grass_above: bool = if y + 1 < column.len() {
+                                if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                    true
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            };
                             vertices.extend_from_slice(&get_mesh_texture_and_pos(
                                 face,
                                 &block.block_type,
                                 pos,
+                                grass_above,
                             ));
                         }
                     } else {
+                        //check if there is a grass block above and make it dirt if so
+                        let grass_above: bool = if y + 1 < column.len() {
+                            if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        };
                         vertices.extend_from_slice(&get_mesh_texture_and_pos(
                             face,
                             &block.block_type,
                             pos,
+                            grass_above,
                         ));
                     }
                     indices.push(base_index + 3);
@@ -613,17 +661,39 @@ impl State {
                     if z + 1 < row.len() {
                         let neighbor = &blocks[x][y][z + 1];
                         if let BlockType::Air = neighbor.block_type {
+                            //check if there is a grass block above and make it dirt if so
+                            let grass_above: bool = if y + 1 < column.len() {
+                                if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                    true
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            };
                             vertices.extend_from_slice(&get_mesh_texture_and_pos(
                                 face,
                                 &block.block_type,
                                 pos,
+                                grass_above,
                             ));
                         }
                     } else {
+                        //check if there is a grass block above and make it dirt if so
+                        let grass_above: bool = if y + 1 < column.len() {
+                            if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        };
                         vertices.extend_from_slice(&get_mesh_texture_and_pos(
                             face,
                             &block.block_type,
                             pos,
+                            grass_above,
                         ));
                     }
                     indices.push(base_index + 3);
@@ -639,17 +709,39 @@ impl State {
                     if z > 0 {
                         let neighbor = &blocks[x][y][z - 1];
                         if let BlockType::Air = neighbor.block_type {
+                            //check if there is a grass block above and make it dirt if so
+                            let grass_above: bool = if y + 1 < column.len() {
+                                if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                    true
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            };
                             vertices.extend_from_slice(&get_mesh_texture_and_pos(
                                 face,
                                 &block.block_type,
                                 pos,
+                                grass_above,
                             ));
                         }
                     } else {
+                        //check if there is a grass block above and make it dirt if so
+                        let grass_above: bool = if y + 1 < column.len() {
+                            if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        };
                         vertices.extend_from_slice(&get_mesh_texture_and_pos(
                             face,
                             &block.block_type,
                             pos,
+                            grass_above,
                         ));
                     }
                     indices.push(base_index + 1);
@@ -665,7 +757,12 @@ impl State {
         //better technique, start in the middle and work your way out?
     }
 }
-fn get_mesh_texture_and_pos(face: Face, block_type: &BlockType, pos: [f32; 3]) -> Vec<Vertex> {
+fn get_mesh_texture_and_pos(
+    face: Face,
+    block_type: &BlockType,
+    pos: [f32; 3],
+    grass_above: bool,
+) -> Vec<Vertex> {
     let vertices = match face {
         Face::Top => [
             [pos[0] - 0.5, pos[1] + 0.5, pos[2] - 0.5],
@@ -706,7 +803,13 @@ fn get_mesh_texture_and_pos(face: Face, block_type: &BlockType, pos: [f32; 3]) -
     };
     let index = match block_type {
         BlockType::Grass => match face {
-            Face::Left | Face::Right | Face::Back | Face::Front => 2,
+            Face::Left | Face::Right | Face::Back | Face::Front => {
+                if grass_above {
+                    1
+                } else {
+                    2
+                }
+            }
             Face::Top => 3,
             Face::Bottom => 1,
         },
