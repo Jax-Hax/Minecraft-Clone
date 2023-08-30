@@ -500,23 +500,158 @@ impl State {
             for (y, row) in column.iter().enumerate() {
                 for (z, block) in row.iter().enumerate() {
                     if let BlockType::Air = block.block_type {
-                        break;
+                        continue;
                     }
-                    let base_index = vertices.len() as u32;
-                    let mut face_vertices: Vec<Vertex> = vec![];
+                    let mut base_index = vertices.len() as u32;
                     let pos = [x as f32, y as f32, z as f32];
-                    let face = Face::Top;
+                    let mut face = Face::Top;
+                    //top
                     if y + 1 < column.len() {
-                        //>= ?
-                        let face = Face::Top;
                         let neighbor = &blocks[x][y + 1][z];
                         if let BlockType::Air = neighbor.block_type {
-                            face_vertices = get_mesh_texture_and_pos(face, &block.block_type, pos);
+                            vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                                face,
+                                &block.block_type,
+                                pos,
+                            ));
                         }
                     } else {
-                        face_vertices = get_mesh_texture_and_pos(face, &block.block_type, pos);
+                        vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                            face,
+                            &block.block_type,
+                            pos,
+                        ));
                     }
-                    vertices.extend_from_slice(&face_vertices);
+                    indices.push(base_index + 3);
+                    indices.push(base_index + 2);
+                    indices.push(base_index);
+                    indices.push(base_index + 1);
+                    indices.push(base_index + 2);
+                    indices.push(base_index + 3);
+
+                    //bottom
+                    base_index = vertices.len() as u32;
+                    face = Face::Bottom;
+                    if y > 0 {
+                        let neighbor = &blocks[x][y - 1][z];
+                        if let BlockType::Air = neighbor.block_type {
+                            vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                                face,
+                                &block.block_type,
+                                pos,
+                            ));
+                        }
+                    } else {
+                        vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                            face,
+                            &block.block_type,
+                            pos,
+                        ));
+                    }
+                    indices.push(base_index + 3);
+                    indices.push(base_index + 2);
+                    indices.push(base_index);
+                    indices.push(base_index + 1);
+                    indices.push(base_index + 2);
+                    indices.push(base_index + 3);
+
+                    //left
+                    base_index = vertices.len() as u32;
+                    face = Face::Left;
+                    if x > 0 {
+                        let neighbor = &blocks[x-1][y][z];
+                        if let BlockType::Air = neighbor.block_type {
+                            vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                                face,
+                                &block.block_type,
+                                pos,
+                            ));
+                        }
+                    } else {
+                        vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                            face,
+                            &block.block_type,
+                            pos,
+                        ));
+                    }
+                    indices.push(base_index + 3);
+                    indices.push(base_index + 2);
+                    indices.push(base_index);
+                    indices.push(base_index + 1);
+                    indices.push(base_index + 2);
+                    indices.push(base_index + 3);
+
+                    //right
+                    base_index = vertices.len() as u32;
+                    face = Face::Right;
+                    if x + 1 < blocks.len() {
+                        let neighbor = &blocks[x+1][y][z];
+                        if let BlockType::Air = neighbor.block_type {
+                            vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                                face,
+                                &block.block_type,
+                                pos,
+                            ));
+                        }
+                    } else {
+                        vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                            face,
+                            &block.block_type,
+                            pos,
+                        ));
+                    }
+                    indices.push(base_index + 3);
+                    indices.push(base_index + 2);
+                    indices.push(base_index);
+                    indices.push(base_index + 1);
+                    indices.push(base_index + 2);
+                    indices.push(base_index + 3);
+
+                    //front
+                    base_index = vertices.len() as u32;
+                    face = Face::Front;
+                    if z + 1 < row.len() {
+                        let neighbor = &blocks[x][y][z+1];
+                        if let BlockType::Air = neighbor.block_type {
+                            vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                                face,
+                                &block.block_type,
+                                pos,
+                            ));
+                        }
+                    } else {
+                        vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                            face,
+                            &block.block_type,
+                            pos,
+                        ));
+                    }
+                    indices.push(base_index + 3);
+                    indices.push(base_index + 2);
+                    indices.push(base_index);
+                    indices.push(base_index + 1);
+                    indices.push(base_index + 2);
+                    indices.push(base_index + 3);
+                    
+                    //back
+                    base_index = vertices.len() as u32;
+                    face = Face::Back;
+                    if z > 0 {
+                        let neighbor = &blocks[x][y][z-1];
+                        if let BlockType::Air = neighbor.block_type {
+                            vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                                face,
+                                &block.block_type,
+                                pos,
+                            ));
+                        }
+                    } else {
+                        vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                            face,
+                            &block.block_type,
+                            pos,
+                        ));
+                    }
                     indices.push(base_index + 3);
                     indices.push(base_index + 2);
                     indices.push(base_index);
@@ -538,14 +673,42 @@ fn get_mesh_texture_and_pos(face: Face, block_type: &BlockType, pos: [f32; 3]) -
             [pos[0] + 0.5, pos[1] + 0.5, pos[2] - 0.5],
             [pos[0] - 0.5, pos[1] + 0.5, pos[2] + 0.5],
         ],
-        _ => todo!(),
+        Face::Bottom => [
+            [pos[0] + 0.5, pos[1] - 0.5, pos[2] - 0.5],
+            [pos[0] - 0.5, pos[1] - 0.5, pos[2] + 0.5],
+            [pos[0] - 0.5, pos[1] - 0.5, pos[2] - 0.5],
+            [pos[0] + 0.5, pos[1] - 0.5, pos[2] + 0.5],
+        ],
+        Face::Left => [
+            [pos[0] - 0.5, pos[1] - 0.5, pos[2] + 0.5],
+            [pos[0] - 0.5, pos[1] + 0.5, pos[2] - 0.5],
+            [pos[0] - 0.5, pos[1] - 0.5, pos[2] - 0.5],
+            [pos[0] - 0.5, pos[1] + 0.5, pos[2] + 0.5],
+        ],
+        Face::Right => [
+            [pos[0] + 0.5, pos[1] - 0.5, pos[2] - 0.5],
+            [pos[0] + 0.5, pos[1] + 0.5, pos[2] + 0.5],
+            [pos[0] + 0.5, pos[1] - 0.5, pos[2] + 0.5],
+            [pos[0] + 0.5, pos[1] + 0.5, pos[2] - 0.5],
+        ],
+        Face::Front => [
+            [pos[0] - 0.5, pos[1] + 0.5, pos[2] + 0.5],
+            [pos[0] + 0.5, pos[1] - 0.5, pos[2] + 0.5],
+            [pos[0] + 0.5, pos[1] + 0.5, pos[2] + 0.5],
+            [pos[0] - 0.5, pos[1] - 0.5, pos[2] + 0.5],
+        ],
+        Face::Back => [
+            [pos[0] - 0.5, pos[1] - 0.5, pos[2] - 0.5],
+            [pos[0] + 0.5, pos[1] + 0.5, pos[2] - 0.5],
+            [pos[0] + 0.5, pos[1] - 0.5, pos[2] - 0.5],
+            [pos[0] - 0.5, pos[1] + 0.5, pos[2] - 0.5],
+        ],
     };
-    println!("HIIII {:#?}", vertices);
     let index = match block_type {
         BlockType::Grass => match face {
             Face::Left | Face::Right | Face::Back | Face::Front => 3,
-            Face::Top => 1,
-            Face::Bottom => 4,
+            Face::Top => 3,
+            Face::Bottom => 2,
         },
         _ => todo!(),
     };
@@ -572,12 +735,6 @@ fn get_texture_coords(index: usize) -> [[f32; 2]; 4] {
     let max_x = min_x + SPRITE_SIZE;
     let min_y = row as f32 * SPRITE_SIZE;
     let max_y = min_y + SPRITE_SIZE;
-    println!("{:#?}", [
-        [min_x, min_y],
-        [max_x, min_y],
-        [max_x, max_y],
-        [min_x, max_y],
-    ]);
     [
         [min_x, max_y],
         [max_x, min_y],
