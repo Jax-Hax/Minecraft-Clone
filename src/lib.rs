@@ -3,7 +3,7 @@ use winit::{event_loop::ControlFlow, event::{WindowEvent, VirtualKeyCode, Elemen
 use crate::engine::State;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-
+use std::convert::TryInto;
 mod engine;
 mod texture;
 mod camera;
@@ -16,7 +16,7 @@ pub enum BlockType{
     Grass,
     Stone
 }
-struct Chunk{
+pub struct Chunk{
     blocks: Vec<Vec<Vec<Block>>>,
     mesh: Mesh
 }
@@ -87,17 +87,17 @@ pub async fn run() {
     });
 }
 fn create_terrain(state: &State) -> [Chunk; 256] {
-    let default_chunk = chunk_gen(1);
-    let mesh = state.build_chunk(&mut default_chunk);
-    let mut chunks: [Chunk; 256] = [Chunk {blocks: chunk_gen(1), state.build_chunk(&mut default_chunk)}; 256];
-    for i in 0..255{
-        let mut blocks = chunk_gen(1);
-        let mesh = state.build_chunk(&mut blocks);
-        chunks[i] = Chunk {blocks: blocks, mesh};
+    let mut chunks = vec![];
+    for i in 0..256{
+        let row = (i / 16) * 16;
+        let col = (i % 16) * 16;
+        let blocks = chunk_gen(1, row, col);
+        let mesh = state.build_chunk(&blocks,row as f32,col as f32);
+        chunks.push(Chunk {blocks: blocks, mesh});
     }
-    chunks
+    chunks.try_into().unwrap_or_else(|v: Vec<Chunk>| panic!("Expected a Vec of length 256 but it was {}", v.len()))
 }
-fn chunk_gen(seed: u64) -> Vec<Vec<Vec<Block>>> {
+fn chunk_gen(seed: u64, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let mut test_blocks: Vec<Vec<Vec<Block>>> = vec![
         vec![
             vec![
@@ -132,24 +132,6 @@ fn chunk_gen(seed: u64) -> Vec<Vec<Vec<Block>>> {
                 Block {  block_type: BlockType::Grass },
                 Block {block_type: BlockType::Grass },
             ],
-        ],
-        vec![
-            vec![
-                Block {  block_type: BlockType::Grass },
-                Block {block_type: BlockType::Grass },
-                Block {  block_type: BlockType::Grass },
-                Block {block_type: BlockType::Grass },
-                Block {  block_type: BlockType::Grass },
-                Block {block_type: BlockType::Grass },
-            ],
-            vec![
-                Block {  block_type: BlockType::Grass },
-                Block {  block_type: BlockType::Grass },
-                Block {  block_type: BlockType::Grass },
-                Block {block_type: BlockType::Grass },
-                Block {  block_type: BlockType::Grass },
-                Block {block_type: BlockType::Grass },
-            ],
             vec![
                 Block {  block_type: BlockType::Grass },
                 Block {  block_type: BlockType::Grass },
@@ -200,11 +182,193 @@ fn chunk_gen(seed: u64) -> Vec<Vec<Vec<Block>>> {
                 Block {  block_type: BlockType::Grass },
                 Block {block_type: BlockType::Grass },
             ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
         ],
         vec![
             vec![
                 Block {  block_type: BlockType::Grass },
                 Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+        ],
+        vec![
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+        ],
+        vec![
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+        ],
+        vec![
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
+                Block {block_type: BlockType::Grass },
+            ],
+            vec![
+                Block {  block_type: BlockType::Grass },
+                Block {  block_type: BlockType::Grass },
                 Block {  block_type: BlockType::Grass },
                 Block {block_type: BlockType::Grass },
                 Block {  block_type: BlockType::Grass },
