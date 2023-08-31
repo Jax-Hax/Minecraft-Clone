@@ -759,7 +759,7 @@ impl State {
                             render = true;
                         }
                     } else {
-                        match right_chunk {
+                        match front_chunk {
                             Some(neighbor_chunk) => {
                                 if let BlockType::Air = neighbor_chunk[x][y][0].block_type {
                                     //check if there is a grass block above and make it dirt if so
@@ -780,6 +780,7 @@ impl State {
                                     ));
                                     render = true;
                                 }
+                                
                             },
                             None => {
                                 let grass_above: bool = if y + 1 < column.len() {
@@ -836,7 +837,7 @@ impl State {
                             render = true;
                         }
                     } else {
-                        match right_chunk {
+                        match back_chunk {
                             Some(neighbor_chunk) => {
                                 if let BlockType::Air = neighbor_chunk[x][y][0].block_type {
                                     //check if there is a grass block above and make it dirt if so

@@ -141,7 +141,7 @@ fn chunk_gen(seed: u64, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
         for j in 0..30 {// up down
             let mut vec2 = vec![];
             for k in 0..16 {
-                if (j + k) / 2 > 10{
+                if k % 4 == 0{
                     vec2.push(Block {
                         block_type: BlockType::Grass,
                     });
