@@ -7,7 +7,7 @@ use winit::{
     event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
 };
-//use noise::{NoiseFn, Perlin, Seedable};
+use noise::{NoiseFn, Perlin, Seedable};
 mod camera;
 mod engine;
 mod texture;
@@ -135,48 +135,34 @@ fn create_terrain(state: &State) -> [Chunk; 256] {
         panic!("Expected a Vec of length 256 but it was {}", v.len())
     })
 }
-fn chunk_gen(seed: u64, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
+fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let mut test_blocks = vec![];
-    for i in 0..16 {
-        //front back
+    let perlin = Perlin::new(seed);
+    let x_scale = 0.1;
+    let y_scale = 0.1;
+    let z_scale = 0.1;
+    for x in 0..16 { //front back
         let mut vec1 = vec![];
-        if i % 4 == 0 {
-            for j in 0..30 {
-                // up down
-                let mut vec2 = vec![];
-                if j % 4 == 0 {
-                    for k in 0..16 {
-                        //left right
-                        if k % 4 == 0 {
-                            vec2.push(Block {
-                                block_type: BlockType::Grass,
-                            });
-                        } else {
-                            vec2.push(Block {
-                                block_type: BlockType::Air,
-                            });
-                        }
-                    }
+        for y in 0..30 { //up down
+            let mut vec2 = vec![];
+            for z in 0..16 { //left right
+
+            let noise_value = perlin.get([
+                x as f64 * x_scale,
+                y as f64 * y_scale,
+                z as f64 * z_scale,
+            ]);
+                let block_type = if y < (noise_value * 30 as f64) as usize {
+                    BlockType::Grass
                 } else {
-                    for k in 0..16 {
-                        vec2.push(Block {
-                            block_type: BlockType::Air,
-                        });
-                    }
-                }
-                vec1.push(vec2);
+                    BlockType::Air
+                };
+
+                vec2.push(Block {
+                    block_type: block_type,
+                });
             }
-        } else {
-            for j in 0..30 {
-                // up down
-                let mut vec2 = vec![];
-                for k in 0..16 {
-                    vec2.push(Block {
-                        block_type: BlockType::Air,
-                    });
-                }
-                vec1.push(vec2);
-            }
+            vec1.push(vec2);
         }
         test_blocks.push(vec1);
     }

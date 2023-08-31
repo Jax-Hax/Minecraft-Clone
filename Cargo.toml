@@ -19,6 +19,7 @@ tobj = { version = "3.2", features = ["async"]}
 wgpu = { version = "0.17"}
 winit = "0.28"
 instant = "0.1"
+noise = "0.8"
 getrandom = { version = "0.2", features = ["js"] }
 
 [dependencies.image]

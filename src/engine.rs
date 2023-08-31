@@ -604,7 +604,7 @@ impl State {
                             render = true;
                         }
                     } else {
-                        match left_chunk {
+                        match left_chunk { //FRONT
                             Some(neighbor_chunk) => {
                                 if let BlockType::Air = neighbor_chunk[15][y][z].block_type {
                                     //check if there is a grass block above and make it dirt if so
