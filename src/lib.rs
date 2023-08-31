@@ -147,17 +147,36 @@ fn create_terrain(state: &State) -> [Chunk; 256] {
 fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let mut test_blocks = vec![];
     let perlin = Perlin::new(seed);
+
+    // Define terrain dimensions and scaling factors
+    let width = 16;
+    let height = 30;
+    let depth = 16;
     let x_scale = 0.1;
-    let y_scale = 0.1;
     let z_scale = 0.1;
-    for i in 0..16 {
+
+    // Generate the terrain blocks
+    for x in 0..width {
         let mut vec1 = vec![];
-        for j in 0..30 {
+        for z in 0..depth {
             let mut vec2 = vec![];
-            for k in 0..16 {
-                vec2.push(Block {
-                    block_type: BlockType::Grass,
-                });
+            
+            // Calculate 2D Perlin noise value for terrain elevation
+            let noise_value = perlin.get([
+                x as f64 * x_scale,
+                z as f64 * z_scale,
+            ]);
+
+            let surface_height = (noise_value * height as f64 * 0.5 + height as f64 * 0.5) as usize;
+
+            for y in 0..height {
+                let block_type = if y < surface_height {
+                    BlockType::Grass
+                } else {
+                    BlockType::Air
+                };
+
+                vec2.push(Block { block_type });
             }
             vec1.push(vec2);
         }
