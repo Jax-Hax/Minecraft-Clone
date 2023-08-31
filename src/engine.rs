@@ -702,6 +702,8 @@ impl State {
                                         grass_above,
                                     ));
                                     render = true;
+                                }else{
+                                    println!("Dont render");
                                 }
                             },
                             None => {
