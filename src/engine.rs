@@ -624,8 +624,9 @@ impl State {
                                         grass_above,
                                     ));
                                     render = true;
+                                    println!("left");
                                 }
-                            },
+                            }
                             None => {
                                 let grass_above: bool = if y + 1 < column.len() {
                                     if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
@@ -654,7 +655,6 @@ impl State {
                         indices.push(base_index + 2);
                         indices.push(base_index + 3);
                     }
-                    
 
                     //right
                     base_index = vertices.len() as u32;
@@ -702,10 +702,9 @@ impl State {
                                         grass_above,
                                     ));
                                     render = true;
-                                }else{
-                                    println!("Dont render");
+                                    println!("right");
                                 }
-                            },
+                            }
                             None => {
                                 let grass_above: bool = if y + 1 < column.len() {
                                     if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
@@ -781,9 +780,9 @@ impl State {
                                         grass_above,
                                     ));
                                     render = true;
+                                    println!("front");
                                 }
-                                
-                            },
+                            }
                             None => {
                                 let grass_above: bool = if y + 1 < column.len() {
                                     if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
@@ -804,7 +803,7 @@ impl State {
                             }
                         }
                     }
-                    if render{
+                    if render {
                         indices.push(base_index + 3);
                         indices.push(base_index + 2);
                         indices.push(base_index);
@@ -859,8 +858,9 @@ impl State {
                                         grass_above,
                                     ));
                                     render = true;
+                                    println!("back");
                                 }
-                            },
+                            }
                             None => {
                                 let grass_above: bool = if y + 1 < column.len() {
                                     if let BlockType::Grass = &blocks[x][y + 1][z].block_type {

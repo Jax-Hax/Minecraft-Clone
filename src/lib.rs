@@ -7,6 +7,7 @@ use winit::{
     event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
 };
+//use noise::{NoiseFn, Perlin, Seedable};
 mod camera;
 mod engine;
 mod texture;
@@ -137,23 +138,45 @@ fn create_terrain(state: &State) -> [Chunk; 256] {
 fn chunk_gen(seed: u64, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let mut test_blocks = vec![];
     for i in 0..16 {
+        //front back
         let mut vec1 = vec![];
-        for j in 0..30 {// up down
-            let mut vec2 = vec![];
-            for k in 0..16 {
-                if k % 4 == 0{
-                    vec2.push(Block {
-                        block_type: BlockType::Grass,
-                    });
+        if i % 4 == 0 {
+            for j in 0..30 {
+                // up down
+                let mut vec2 = vec![];
+                if j % 4 == 0 {
+                    for k in 0..16 {
+                        //left right
+                        if k % 4 == 0 {
+                            vec2.push(Block {
+                                block_type: BlockType::Grass,
+                            });
+                        } else {
+                            vec2.push(Block {
+                                block_type: BlockType::Air,
+                            });
+                        }
+                    }
+                } else {
+                    for k in 0..16 {
+                        vec2.push(Block {
+                            block_type: BlockType::Air,
+                        });
+                    }
                 }
-                else{
+                vec1.push(vec2);
+            }
+        } else {
+            for j in 0..30 {
+                // up down
+                let mut vec2 = vec![];
+                for k in 0..16 {
                     vec2.push(Block {
                         block_type: BlockType::Air,
                     });
                 }
-                
+                vec1.push(vec2);
             }
-            vec1.push(vec2);
         }
         test_blocks.push(vec1);
     }
