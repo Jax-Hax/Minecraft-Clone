@@ -1,5 +1,6 @@
 use crate::engine::State;
 use engine::Mesh;
+use noise::{NoiseFn, Perlin, Seedable};
 use std::convert::TryInto;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -7,7 +8,6 @@ use winit::{
     event::{DeviceEvent, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
 };
-use noise::{NoiseFn, Perlin, Seedable};
 mod camera;
 mod engine;
 mod texture;
@@ -107,20 +107,29 @@ fn create_terrain(state: &State) -> [Chunk; 256] {
             row as f32,
             col as f32,
             match i.checked_sub(16) {
+                //actually front
                 Some(j) => chunk_blocks_vec.get(j),
-                None => Option::None,
+                None => None,
             },
             match i.checked_add(16) {
+                //actually back
                 Some(j) => chunk_blocks_vec.get(j),
-                None => Option::None,
+                None => None,
+            },
+            if (i + 1) % 16 == 0 {
+                //actually left
+                None
+            } else {
+                chunk_blocks_vec.get(i + 1)
             },
             match i.checked_sub(1) {
-                Some(j) => chunk_blocks_vec.get(j),
-                None => Option::None,
-            },
-            match i.checked_add(1) {
-                Some(j) => chunk_blocks_vec.get(j),
-                None => Option::None,
+                Some(j) => if j % 16 == 15 {
+                    //actually right
+                    None
+                } else {
+                    chunk_blocks_vec.get(j)
+                },
+                None => None,
             },
         );
         chunk_mesh_vec.push(mesh);
@@ -141,25 +150,13 @@ fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let x_scale = 0.1;
     let y_scale = 0.1;
     let z_scale = 0.1;
-    for x in 0..16 { //front back
+    for i in 0..16 {
         let mut vec1 = vec![];
-        for z in 0..16 { //left right
+        for j in 0..30 {
             let mut vec2 = vec![];
-            for y in 0..30 { //up down
-
-            let noise_value = perlin.get([
-                x as f64 * x_scale,
-                y as f64 * y_scale,
-                z as f64 * z_scale,
-            ]);
-                let block_type = if y < (noise_value * 30 as f64) as usize {
-                    BlockType::Grass
-                } else {
-                    BlockType::Air
-                };
-
+            for k in 0..16 {
                 vec2.push(Block {
-                    block_type: block_type,
+                    block_type: BlockType::Grass,
                 });
             }
             vec1.push(vec2);

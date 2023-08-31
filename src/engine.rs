@@ -245,7 +245,7 @@ impl State {
         let camera = camera::Camera::new((0.0, 5.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
         let projection =
             camera::Projection::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 100.0);
-        let camera_controller = camera::CameraController::new(8.0, 1.0);
+        let camera_controller = camera::CameraController::new(30.0, 1.0);
 
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera, &projection);
@@ -505,6 +505,13 @@ impl State {
     ) -> Mesh {
         let mut vertices: Vec<Vertex> = vec![];
         let mut indices: Vec<u32> = vec![];
+        
+        //vars in for loop code, preinitialized
+        let mut grass_above;
+        let mut neighbor_chunk_block_option;
+        let mut base_index;
+        let mut face;
+        let mut neighbor;
         for (x, column) in blocks.iter().enumerate() {
             for (y, row) in column.iter().enumerate() {
                 for (z, block) in row.iter().enumerate() {
@@ -513,13 +520,11 @@ impl State {
                         continue;
                     }
                     let pos = [x as f32 + x_offset, y as f32, z as f32 + z_offset];
-                    let mut grass_above;
-                    let mut neighbor_chunk_block_option;
 
                     //block rendering
-                    let mut base_index = vertices.len() as u32;
-                    let mut face = Face::Top;
-                    let mut neighbor = if y + 1 < column.len() {Some(&blocks[x][y + 1][z])} else {None};
+                    base_index = vertices.len() as u32;
+                    face = Face::Top;
+                    neighbor = if y + 1 < column.len() {Some(&blocks[x][y + 1][z])} else {None};
                     get_block_face(base_index,face, neighbor, block, pos, &mut vertices, &mut indices,false, None);
 
                     base_index = vertices.len() as u32;
