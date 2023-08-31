@@ -143,9 +143,9 @@ fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let z_scale = 0.1;
     for x in 0..16 { //front back
         let mut vec1 = vec![];
-        for y in 0..30 { //up down
+        for z in 0..16 { //left right
             let mut vec2 = vec![];
-            for z in 0..16 { //left right
+            for y in 0..30 { //up down
 
             let noise_value = perlin.get([
                 x as f64 * x_scale,
