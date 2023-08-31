@@ -109,15 +109,15 @@ fn create_terrain(state: &State) -> [Chunk; 256] {
                 Some(j) => chunk_blocks_vec.get(j),
                 None => Option::None,
             },
-            match i.checked_sub(16) {
+            match i.checked_add(16) {
                 Some(j) => chunk_blocks_vec.get(j),
                 None => Option::None,
             },
-            match i.checked_sub(16) {
+            match i.checked_sub(1) {
                 Some(j) => chunk_blocks_vec.get(j),
                 None => Option::None,
             },
-            match i.checked_sub(16) {
+            match i.checked_add(1) {
                 Some(j) => chunk_blocks_vec.get(j),
                 None => Option::None,
             },
@@ -138,12 +138,20 @@ fn chunk_gen(seed: u64, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let mut test_blocks = vec![];
     for i in 0..16 {
         let mut vec1 = vec![];
-        for j in 0..30 {
+        for j in 0..30 {// up down
             let mut vec2 = vec![];
             for k in 0..16 {
-                vec2.push(Block {
-                    block_type: BlockType::Grass,
-                });
+                if (j + k) / 2 > 10{
+                    vec2.push(Block {
+                        block_type: BlockType::Grass,
+                    });
+                }
+                else{
+                    vec2.push(Block {
+                        block_type: BlockType::Air,
+                    });
+                }
+                
             }
             vec1.push(vec2);
         }
