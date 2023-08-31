@@ -245,7 +245,7 @@ impl State {
         let camera = camera::Camera::new((0.0, 5.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
         let projection =
             camera::Projection::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 100.0);
-        let camera_controller = camera::CameraController::new(4.0, 1.0);
+        let camera_controller = camera::CameraController::new(8.0, 1.0);
 
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera, &projection);
@@ -493,7 +493,16 @@ impl State {
             num_elements: indices.len() as u32,
         }
     }
-    pub fn build_chunk(&self, blocks: &Vec<Vec<Vec<Block>>>, x_offset: f32, z_offset: f32) -> Mesh {
+    pub fn build_chunk(
+        &self,
+        blocks: &Vec<Vec<Vec<Block>>>,
+        x_offset: f32,
+        z_offset: f32,
+        left_chunk: Option<&Vec<Vec<Vec<Block>>>>,
+        right_chunk: Option<&Vec<Vec<Vec<Block>>>>,
+        front_chunk: Option<&Vec<Vec<Vec<Block>>>>,
+        back_chunk: Option<&Vec<Vec<Vec<Block>>>>,
+    ) -> Mesh {
         let mut vertices: Vec<Vertex> = vec![];
         let mut indices: Vec<u32> = vec![];
         for (x, column) in blocks.iter().enumerate() {
@@ -583,22 +592,45 @@ impl State {
                             ));
                         }
                     } else {
-                        //check if there is a grass block above and make it dirt if so
-                        let grass_above: bool = if y + 1 < column.len() {
-                            if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
-                                true
-                            } else {
-                                false
+                        match left_chunk {
+                            Some(neighbor_chunk) => {
+                                if let BlockType::Air = neighbor_chunk[15][y][z].block_type {
+                                    //check if there is a grass block above and make it dirt if so
+                                    let grass_above: bool = if y + 1 < column.len() {
+                                        if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    } else {
+                                        false
+                                    };
+                                    vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                                        face,
+                                        &block.block_type,
+                                        pos,
+                                        grass_above,
+                                    ));
+                                }
+                            },
+                            None => {
+                                let grass_above: bool = if y + 1 < column.len() {
+                                    if let BlockType::Grass = &blocks[x][y + 1][z].block_type {
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                } else {
+                                    false
+                                };
+                                vertices.extend_from_slice(&get_mesh_texture_and_pos(
+                                    face,
+                                    &block.block_type,
+                                    pos,
+                                    grass_above,
+                                ));
                             }
-                        } else {
-                            false
-                        };
-                        vertices.extend_from_slice(&get_mesh_texture_and_pos(
-                            face,
-                            &block.block_type,
-                            pos,
-                            grass_above,
-                        ));
+                        }
                     }
                     indices.push(base_index + 3);
                     indices.push(base_index + 2);
