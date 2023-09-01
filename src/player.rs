@@ -7,12 +7,6 @@ use crate::camera::Camera;
 use crate::{Block, BlockType, Chunk};
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
 pub struct Player {
-    block_left_bottom: Block,
-    block_left_top: Block,
-    block_right_bottom: Block,
-    block_right_top: Block,
-    block_top: Block,
-    block_bottom: Block,
     amount_left: f32,
     amount_right: f32,
     amount_forward: f32,
@@ -30,14 +24,7 @@ pub struct Player {
 }
 impl Player {
     pub fn new(speed: f32, sensitivity: f32) -> Self {
-        let block_default = Block::default();
         Self {
-            block_left_bottom: block_default,
-            block_left_top: block_default,
-            block_right_bottom: block_default,
-            block_right_top: block_default,
-            block_top: block_default,
-            block_bottom: block_default,
             amount_left: 0.0,
             amount_right: 0.0,
             amount_forward: 0.0,
@@ -100,32 +87,65 @@ impl Player {
         let (yaw_sin, yaw_cos) = camera.yaw.0.sin_cos();
         let forward = Vector3::new(yaw_cos, 0.0, yaw_sin).normalize();
         let right = Vector3::new(-yaw_sin, 0.0, yaw_cos).normalize();
-        self.local_pos += forward * (self.amount_forward - self.amount_backward) * self.speed * dt;
-        self.local_pos += right * (self.amount_right - self.amount_left) * self.speed * dt;
-        if self.local_pos.x > 1.0{
+        //get chunks
+        let cur_chunk_index = (self.world_pos.z / 16) + (16 * (self.world_pos.x / 16));
+        let cur_chunk = &chunks[cur_chunk_index];
+        let front_chunk = &chunks[cur_chunk_index - 16];
+        let back_chunk = &chunks[cur_chunk_index + 16];
+        let left_chunk = &chunks[cur_chunk_index + 1];
+        let right_chunk = &chunks[cur_chunk_index - 1];
+        //get transforms
+        let forward_am = forward * (self.amount_forward - self.amount_backward) * self.speed * dt;
+        let right_am = right * (self.amount_right - self.amount_left) * self.speed * dt;
+        let move_am = forward_am + right_am;
+        //check if can move right
+        let (block_right_bottom, block_right_top) = if (self.world_pos.z % 16) as isize - 1 < 0 {
+            (
+                left_chunk.blocks[self.world_pos.x % 16][self.world_pos.y - 1][15],
+                left_chunk.blocks[self.world_pos.x % 16][self.world_pos.y][15],
+            )
+        } else {
+            (
+                cur_chunk.blocks[self.world_pos.x % 16][self.world_pos.y - 1]
+                    [(self.world_pos.z % 16) - 1],
+                left_chunk.blocks[self.world_pos.x % 16][self.world_pos.y]
+                    [(self.world_pos.z % 16) - 1],
+            )
+        };
+        println!(
+            "{:#?}",
+            self.local_pos.x < 0.1
+            && (block_right_bottom.is_solid || block_right_top.is_solid)
+        );
+        if !(self.local_pos.x < 0.1
+            && (block_right_bottom.is_solid || block_right_top.is_solid)
+            && move_am.x > 0.01)
+        {
+            self.local_pos += move_am;
+        }
+        if self.local_pos.x > 1.0 {
             self.local_pos.x -= 1.0;
             self.world_pos.x += 1;
         }
-        if self.local_pos.z > 1.0{
+        if self.local_pos.z > 1.0 {
             self.local_pos.z -= 1.0;
             self.world_pos.z += 1;
         }
-        if self.local_pos.x < -1.0{
+        if self.local_pos.x < -1.0 {
             self.local_pos.x += 1.0;
             self.world_pos.x -= 1;
         }
-        if self.local_pos.z < -1.0{
+        if self.local_pos.z < -1.0 {
             self.local_pos.z += 1.0;
             self.world_pos.z -= 1;
         }
-        let cur_chunk = &chunks[(self.world_pos.z / 16) + (16*(self.world_pos.x / 16))];
-        println!("{}", (self.world_pos.z / 16) + (16*(self.world_pos.x / 16)));
-        self.block_bottom = cur_chunk.blocks[self.world_pos.x % 16][self.world_pos.y - 2][self.world_pos.z % 16];
+        let block_bottom =
+            cur_chunk.blocks[self.world_pos.x % 16][self.world_pos.y - 2][self.world_pos.z % 16];
         // Move up/down. Since we don't use roll, we can just
         // modify the y coordinate directly.
-        if let BlockType::Air = self.block_bottom.block_type {
+        if let BlockType::Air = block_bottom.block_type {
             self.local_pos.y -= self.fall_speed * dt;
-            if self.local_pos.y < -1.0{
+            if self.local_pos.y < -1.0 {
                 self.local_pos.y += 1.0;
                 self.world_pos.y -= 1;
             }

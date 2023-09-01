@@ -15,6 +15,17 @@ mod player;
 #[derive(Copy, Clone, Default,Debug)]
 pub struct Block {
     block_type: BlockType,
+    is_solid: bool
+}
+impl Block{
+    pub fn new(block_type: BlockType) -> Self {
+        let mut is_solid;
+        match block_type {
+            BlockType::Grass => is_solid = true,
+            _ => is_solid = false
+        }
+        Block { block_type, is_solid }
+    }
 }
 #[derive(Copy, Clone, Default,Debug)]
 pub enum BlockType {
@@ -170,9 +181,7 @@ fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
                     BlockType::Air
                 };
 
-                vec2.push(Block {
-                    block_type: block_type,
-                });
+                vec2.push(Block::new(block_type));
             }
             vec1.push(vec2);
         }
@@ -191,9 +200,7 @@ fn flip_2d_vector(input: Vec<Vec<Block>>) -> Vec<Vec<Block>> {
 
     let mut flipped = vec![
         vec![
-            Block {
-                block_type: BlockType::Air
-            };
+            Block::default();
             num_rows
         ];
         num_cols
