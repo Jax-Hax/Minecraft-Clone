@@ -149,16 +149,16 @@ fn create_terrain(state: &State) -> [Chunk; 256] {
 fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let mut test_blocks = vec![];
     let perlin = Perlin::new(seed);
-    let x_scale = 0.1;
-    let z_scale = 0.1;
+    let x_scale = 0.03;
+    let z_scale = 0.03;
     for x in 0..16 { //front back
         let mut vec1 = vec![];
         for z in 0..16 { //left right
             let mut vec2 = vec![];
-            let noise_value = perlin.get([
+            let noise_value = (perlin.get([
                 (x + row) as f64 * x_scale,
                 (z + col) as f64 * z_scale,
-            ]) * 30.0;
+            ]) + 2.0) * 10.0;
             for y in 0..30 { //up down
                 let block_type = if y < (noise_value) as usize {
                     BlockType::Grass

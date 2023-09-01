@@ -592,15 +592,7 @@ fn get_block_face(base_index: u32, face: Face, neighbor_block_option: Option<&Bl
                     }
                     //otherwise the neighboring chunk's block is a solid block so you don't need to render
                 }
-                None => {
-                    vertices.extend_from_slice(&get_mesh_texture_and_pos(
-                        face,
-                        &block.block_type,
-                        pos,
-                        grass_above,
-                    ));
-                    render = true;
-                }
+                None => {}
             }
         }
     }
