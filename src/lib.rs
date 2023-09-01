@@ -125,12 +125,14 @@ fn create_terrain(state: &State) -> [Chunk; 256] {
                 chunk_blocks_vec.get(i + 1)
             },
             match i.checked_sub(1) {
-                Some(j) => if j % 16 == 15 {
-                    //actually right
-                    None
-                } else {
-                    chunk_blocks_vec.get(j)
-                },
+                Some(j) => {
+                    if j % 16 == 15 {
+                        //actually right
+                        None
+                    } else {
+                        chunk_blocks_vec.get(j)
+                    }
+                }
                 None => None,
             },
         );
@@ -151,15 +153,16 @@ fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
     let perlin = Perlin::new(seed);
     let x_scale = 0.03;
     let z_scale = 0.03;
-    for x in 0..16 { //front back
+    for x in 0..16 {
+        //front back
         let mut vec1 = vec![];
-        for z in 0..16 { //left right
+        for z in 0..16 {
+            //left right
             let mut vec2 = vec![];
-            let noise_value = (perlin.get([
-                (x + row) as f64 * x_scale,
-                (z + col) as f64 * z_scale,
-            ]) + 2.0) * 10.0;
-            for y in 0..30 { //up down
+            let noise_value =
+                (perlin.get([(x + row) as f64 * x_scale, (z + col) as f64 * z_scale]) + 2.0) * 10.0;
+            for y in 0..30 {
+                //up down
                 let block_type = if y < (noise_value) as usize {
                     BlockType::Grass
                 } else {
@@ -172,7 +175,7 @@ fn chunk_gen(seed: u32, row: i32, col: i32) -> Vec<Vec<Vec<Block>>> {
             }
             vec1.push(vec2);
         }
-        
+
         test_blocks.push(flip_2d_vector(vec1));
     }
     test_blocks
@@ -181,18 +184,25 @@ fn flip_2d_vector(input: Vec<Vec<Block>>) -> Vec<Vec<Block>> {
     if input.is_empty() {
         return Vec::new();
     }
-    
+
     let num_rows = input.len();
     let num_cols = input[0].len();
-    
-    let mut flipped = vec![vec![Block { block_type: BlockType::Air }; num_rows]; num_cols];
-    
+
+    let mut flipped = vec![
+        vec![
+            Block {
+                block_type: BlockType::Air
+            };
+            num_rows
+        ];
+        num_cols
+    ];
+
     for i in 0..num_rows {
         for j in 0..num_cols {
             flipped[j][i] = input[i][j];
         }
     }
-    
+
     flipped
 }
-

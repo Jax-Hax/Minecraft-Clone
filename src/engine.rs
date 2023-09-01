@@ -505,7 +505,7 @@ impl State {
     ) -> Mesh {
         let mut vertices: Vec<Vertex> = vec![];
         let mut indices: Vec<u32> = vec![];
-        
+
         //vars in for loop code, preinitialized
         let mut grass_above;
         let mut neighbor_chunk_block_option;
@@ -520,42 +520,131 @@ impl State {
                         continue;
                     }
                     let pos = [x as f32 + x_offset, y as f32, z as f32 + z_offset];
-                    grass_above = y + 1 < column.len() && matches!(blocks[x][y + 1][z].block_type, BlockType::Grass);
+                    grass_above = y + 1 < column.len()
+                        && matches!(blocks[x][y + 1][z].block_type, BlockType::Grass);
 
                     //block rendering
                     base_index = vertices.len() as u32;
                     face = Face::Top;
-                    neighbor = if y + 1 < column.len() {Some(&blocks[x][y + 1][z])} else {None};
-                    get_block_face(base_index,face, neighbor, block, pos, &mut vertices, &mut indices,false, None);
+                    neighbor = if y + 1 < column.len() {
+                        Some(&blocks[x][y + 1][z])
+                    } else {
+                        None
+                    };
+                    get_block_face(
+                        base_index,
+                        face,
+                        neighbor,
+                        block,
+                        pos,
+                        &mut vertices,
+                        &mut indices,
+                        false,
+                        None,
+                    );
 
                     base_index = vertices.len() as u32;
                     face = Face::Bottom;
-                    neighbor = if y > 0 {Some(&blocks[x][y - 1][z])} else {None};
-                    get_block_face(base_index,face, neighbor, block, pos, &mut vertices, &mut indices,false, None);
+                    neighbor = if y > 0 {
+                        Some(&blocks[x][y - 1][z])
+                    } else {
+                        None
+                    };
+                    get_block_face(
+                        base_index,
+                        face,
+                        neighbor,
+                        block,
+                        pos,
+                        &mut vertices,
+                        &mut indices,
+                        false,
+                        None,
+                    );
 
                     base_index = vertices.len() as u32;
                     face = Face::Left; //this is actually front i think
-                    neighbor = if x > 0 {Some(&blocks[x - 1][y][z])} else {None};
-                    neighbor_chunk_block_option = left_chunk.map_or(None, |chunk| Some(&chunk[15][y][z]));
-                    get_block_face(base_index,face, neighbor, block, pos, &mut vertices, &mut indices,grass_above, neighbor_chunk_block_option);
-                    
+                    neighbor = if x > 0 {
+                        Some(&blocks[x - 1][y][z])
+                    } else {
+                        None
+                    };
+                    neighbor_chunk_block_option =
+                        left_chunk.map_or(None, |chunk| Some(&chunk[15][y][z]));
+                    get_block_face(
+                        base_index,
+                        face,
+                        neighbor,
+                        block,
+                        pos,
+                        &mut vertices,
+                        &mut indices,
+                        grass_above,
+                        neighbor_chunk_block_option,
+                    );
+
                     base_index = vertices.len() as u32;
                     face = Face::Right;
-                    neighbor = if x + 1 < blocks.len() {Some(&blocks[x + 1][y][z])} else {None};
-                    neighbor_chunk_block_option = right_chunk.map_or(None, |chunk| Some(&chunk[0][y][z]));
-                    get_block_face(base_index,face, neighbor, block, pos, &mut vertices, &mut indices,grass_above, neighbor_chunk_block_option);
+                    neighbor = if x + 1 < blocks.len() {
+                        Some(&blocks[x + 1][y][z])
+                    } else {
+                        None
+                    };
+                    neighbor_chunk_block_option =
+                        right_chunk.map_or(None, |chunk| Some(&chunk[0][y][z]));
+                    get_block_face(
+                        base_index,
+                        face,
+                        neighbor,
+                        block,
+                        pos,
+                        &mut vertices,
+                        &mut indices,
+                        grass_above,
+                        neighbor_chunk_block_option,
+                    );
 
                     base_index = vertices.len() as u32;
                     face = Face::Front;
-                    neighbor = if z + 1 < row.len() {Some(&blocks[x][y][z + 1])} else {None};
-                    neighbor_chunk_block_option = front_chunk.map_or(None, |chunk| Some(&chunk[x][y][0]));
-                    get_block_face(base_index,face, neighbor, block, pos, &mut vertices, &mut indices,grass_above, neighbor_chunk_block_option);
+                    neighbor = if z + 1 < row.len() {
+                        Some(&blocks[x][y][z + 1])
+                    } else {
+                        None
+                    };
+                    neighbor_chunk_block_option =
+                        front_chunk.map_or(None, |chunk| Some(&chunk[x][y][0]));
+                    get_block_face(
+                        base_index,
+                        face,
+                        neighbor,
+                        block,
+                        pos,
+                        &mut vertices,
+                        &mut indices,
+                        grass_above,
+                        neighbor_chunk_block_option,
+                    );
 
                     base_index = vertices.len() as u32;
                     face = Face::Back;
-                    neighbor = if z > 0 {Some(&blocks[x][y][z - 1])} else {None};
-                    neighbor_chunk_block_option = back_chunk.map_or(None, |chunk| Some(&chunk[x][y][15]));
-                    get_block_face(base_index,face, neighbor, block, pos, &mut vertices, &mut indices,grass_above, neighbor_chunk_block_option);
+                    neighbor = if z > 0 {
+                        Some(&blocks[x][y][z - 1])
+                    } else {
+                        None
+                    };
+                    neighbor_chunk_block_option =
+                        back_chunk.map_or(None, |chunk| Some(&chunk[x][y][15]));
+                    get_block_face(
+                        base_index,
+                        face,
+                        neighbor,
+                        block,
+                        pos,
+                        &mut vertices,
+                        &mut indices,
+                        grass_above,
+                        neighbor_chunk_block_option,
+                    );
                 }
             }
         }
@@ -563,7 +652,17 @@ impl State {
         //better technique, start in the middle and work your way out?
     }
 }
-fn get_block_face(base_index: u32, face: Face, neighbor_block_option: Option<&Block>, block: &Block, pos: [f32; 3], vertices: &mut Vec<Vertex>, indices: &mut Vec<u32>, grass_above: bool, neighbor_chunk_block_option: Option<&Block>){
+fn get_block_face(
+    base_index: u32,
+    face: Face,
+    neighbor_block_option: Option<&Block>,
+    block: &Block,
+    pos: [f32; 3],
+    vertices: &mut Vec<Vertex>,
+    indices: &mut Vec<u32>,
+    grass_above: bool,
+    neighbor_chunk_block_option: Option<&Block>,
+) {
     let mut render = false;
     match neighbor_block_option {
         Some(neighbor_block) => {
