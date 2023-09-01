@@ -12,12 +12,13 @@ mod camera;
 mod engine;
 mod texture;
 mod player;
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default,Debug)]
 pub struct Block {
     block_type: BlockType,
 }
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default,Debug)]
 pub enum BlockType {
+    #[default]
     Air,
     Water,
     Grass,
@@ -74,7 +75,7 @@ pub async fn run() {
                 let now = instant::Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                state.update(dt);
+                state.update(dt, &mut chunks);
                 match state.render(&chunks) {
                     Ok(_) => {}
                     // Reconfigure the surface if it's lost or outdated

@@ -1,18 +1,58 @@
-use std::time::Duration;
 use cgmath::*;
-use winit::dpi::PhysicalPosition;
-use winit::event::*;
 use std::f32::consts::FRAC_PI_2;
+use std::time::Duration;
+use winit::event::*;
 
 use crate::camera::Camera;
+use crate::{Block, BlockType, Chunk};
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
-pub struct Player{
-    controller: CameraController
+pub struct Player {
+    block_left_bottom: Block,
+    block_left_top: Block,
+    block_right_bottom: Block,
+    block_right_top: Block,
+    block_top: Block,
+    block_bottom: Block,
+    amount_left: f32,
+    amount_right: f32,
+    amount_forward: f32,
+    amount_backward: f32,
+    amount_up: f32,
+    rotate_horizontal: f32,
+    rotate_vertical: f32,
+    speed: f32,
+    fall_speed: f32,
+    sensitivity: f32,
+    jump: bool,
+    jump_am: f32,
+    local_pos: Point3<f32>,
+    world_pos: Point3<usize>,
 }
-impl Player{
-    pub fn new(speed: f32, sensitivity: f32) -> Self{
-        let controller = CameraController::new(speed, sensitivity);
-        Self { controller }
+impl Player {
+    pub fn new(speed: f32, sensitivity: f32) -> Self {
+        let block_default = Block::default();
+        Self {
+            block_left_bottom: block_default,
+            block_left_top: block_default,
+            block_right_bottom: block_default,
+            block_right_top: block_default,
+            block_top: block_default,
+            block_bottom: block_default,
+            amount_left: 0.0,
+            amount_right: 0.0,
+            amount_forward: 0.0,
+            amount_backward: 0.0,
+            amount_up: 0.0,
+            rotate_horizontal: 0.0,
+            rotate_vertical: 0.0,
+            speed,
+            fall_speed: 30.0,
+            sensitivity,
+            jump: false,
+            jump_am: 0.0,
+            local_pos: (0.5, 0.5, 0.0).into(), //x, y, z
+            world_pos: (30, 29, 30).into(), //x, y, z, actually an i32 but i cant represent it cus i need to add to local_pos
+        }
     }
     pub fn process_keyboard(&mut self, key: VirtualKeyCode, state: ElementState) -> bool {
         let amount = if state == ElementState::Pressed {
@@ -22,27 +62,24 @@ impl Player{
         };
         match key {
             VirtualKeyCode::W | VirtualKeyCode::Up => {
-                self.controller.amount_forward = amount;
+                self.amount_forward = amount;
                 true
             }
             VirtualKeyCode::S | VirtualKeyCode::Down => {
-                self.controller.amount_backward = amount;
+                self.amount_backward = amount;
                 true
             }
             VirtualKeyCode::A | VirtualKeyCode::Left => {
-                self.controller.amount_left = amount;
+                self.amount_left = amount;
                 true
             }
             VirtualKeyCode::D | VirtualKeyCode::Right => {
-                self.controller.amount_right = amount;
+                self.amount_right = amount;
                 true
             }
             VirtualKeyCode::Space => {
-                self.controller.amount_up = amount;
-                true
-            }
-            VirtualKeyCode::LShift => {
-                self.controller.amount_down = amount;
+                self.jump = true;
+                self.jump_am = 1.0;
                 true
             }
             _ => false,
@@ -50,77 +87,49 @@ impl Player{
     }
 
     pub fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64) {
-        self.controller.rotate_horizontal = mouse_dx as f32;
-        self.controller.rotate_vertical = mouse_dy as f32;
+        self.rotate_horizontal = mouse_dx as f32;
+        self.rotate_vertical = mouse_dy as f32;
     }
-
-    pub fn process_scroll(&mut self, delta: &MouseScrollDelta) {
-        self.controller.scroll = match delta {
-            // I'm assuming a line is about 100 pixels
-            MouseScrollDelta::LineDelta(_, scroll) => scroll * 3.0,
-            MouseScrollDelta::PixelDelta(PhysicalPosition { y: scroll, .. }) => *scroll as f32,
-        };
+    pub fn update_player(&mut self, camera: &mut Camera, dt: Duration, chunks: &mut [Chunk; 256]) {
+        self.update_camera(camera, dt, chunks);
     }
-    pub fn update_camera(&mut self, camera: &mut Camera, dt: Duration) {
-        self.controller.update_camera(camera, dt);
-    }
-}
-
-#[derive(Debug)]
-pub struct CameraController {
-    amount_left: f32,
-    amount_right: f32,
-    amount_forward: f32,
-    amount_backward: f32,
-    amount_up: f32,
-    amount_down: f32,
-    rotate_horizontal: f32,
-    rotate_vertical: f32,
-    scroll: f32,
-    speed: f32,
-    sensitivity: f32,
-}
-
-impl CameraController {
-    fn new(speed: f32, sensitivity: f32) -> Self {
-        Self {
-            amount_left: 0.0,
-            amount_right: 0.0,
-            amount_forward: 0.0,
-            amount_backward: 0.0,
-            amount_up: 0.0,
-            amount_down: 0.0,
-            rotate_horizontal: 0.0,
-            rotate_vertical: 0.0,
-            scroll: 0.0,
-            speed,
-            sensitivity,
-        }
-    }
-
-    fn update_camera(&mut self, camera: &mut Camera, dt: Duration) {
+    fn update_camera(&mut self, camera: &mut Camera, dt: Duration, chunks: &mut [Chunk; 256]) {
         let dt = dt.as_secs_f32();
 
         // Move forward/backward and left/right
         let (yaw_sin, yaw_cos) = camera.yaw.0.sin_cos();
         let forward = Vector3::new(yaw_cos, 0.0, yaw_sin).normalize();
         let right = Vector3::new(-yaw_sin, 0.0, yaw_cos).normalize();
-        camera.position += forward * (self.amount_forward - self.amount_backward) * self.speed * dt;
-        camera.position += right * (self.amount_right - self.amount_left) * self.speed * dt;
-
-        // Move in/out (aka. "zoom")
-        // Note: this isn't an actual zoom. The camera's position
-        // changes when zooming. I've added this to make it easier
-        // to get closer to an object you want to focus on.
-        let (pitch_sin, pitch_cos) = camera.pitch.0.sin_cos();
-        let scrollward =
-            Vector3::new(pitch_cos * yaw_cos, pitch_sin, pitch_cos * yaw_sin).normalize();
-        camera.position += scrollward * self.scroll * self.speed * self.sensitivity * dt;
-        self.scroll = 0.0;
-
+        self.local_pos += forward * (self.amount_forward - self.amount_backward) * self.speed * dt;
+        self.local_pos += right * (self.amount_right - self.amount_left) * self.speed * dt;
+        if self.local_pos.x > 1.0{
+            self.local_pos.x -= 1.0;
+            self.world_pos.x += 1;
+        }
+        if self.local_pos.z > 1.0{
+            self.local_pos.z -= 1.0;
+            self.world_pos.z += 1;
+        }
+        if self.local_pos.x < -1.0{
+            self.local_pos.x += 1.0;
+            self.world_pos.x -= 1;
+        }
+        if self.local_pos.z < -1.0{
+            self.local_pos.z += 1.0;
+            self.world_pos.z -= 1;
+        }
+        let cur_chunk = &chunks[(self.world_pos.z / 16) + (16*(self.world_pos.x / 16))];
+        println!("{}", (self.world_pos.z / 16) + (16*(self.world_pos.x / 16)));
+        self.block_bottom = cur_chunk.blocks[self.world_pos.x % 16][self.world_pos.y - 2][self.world_pos.z % 16];
         // Move up/down. Since we don't use roll, we can just
         // modify the y coordinate directly.
-        camera.position.y += (self.amount_up - self.amount_down) * self.speed * dt;
+        if let BlockType::Air = self.block_bottom.block_type {
+            self.local_pos.y -= self.fall_speed * dt;
+            if self.local_pos.y < -1.0{
+                self.local_pos.y += 1.0;
+                self.world_pos.y -= 1;
+            }
+        }
 
         // Rotate
         camera.yaw += Rad(self.rotate_horizontal) * self.sensitivity * dt;
@@ -138,5 +147,8 @@ impl CameraController {
         } else if camera.pitch > Rad(SAFE_FRAC_PI_2) {
             camera.pitch = Rad(SAFE_FRAC_PI_2);
         }
+        camera.position.x = self.local_pos.x + self.world_pos.x as f32;
+        camera.position.y = self.local_pos.y + self.world_pos.y as f32;
+        camera.position.z = self.local_pos.z + self.world_pos.z as f32;
     }
 }

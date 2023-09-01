@@ -429,15 +429,11 @@ impl State {
                     },
                 ..
             } => self.player.process_keyboard(*key, *state),
-            WindowEvent::MouseWheel { delta, .. } => {
-                self.player.process_scroll(delta);
-                true
-            }
             _ => false,
         }
     }
-    pub fn update(&mut self, dt: std::time::Duration) {
-        self.player.update_camera(&mut self.camera, dt);
+    pub fn update(&mut self, dt: std::time::Duration, chunks: &mut [Chunk; 256]) {
+        self.player.update_player(&mut self.camera, dt, chunks);
         self.camera_uniform
             .update_view_proj(&self.camera, &self.projection);
         self.queue.write_buffer(
