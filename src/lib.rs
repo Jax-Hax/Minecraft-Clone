@@ -1,6 +1,6 @@
 use crate::engine::State;
 use engine::Mesh;
-use noise::{NoiseFn, Perlin, Seedable};
+use noise::{NoiseFn, Perlin};
 use std::convert::TryInto;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -11,6 +11,7 @@ use winit::{
 mod camera;
 mod engine;
 mod texture;
+mod player;
 #[derive(Copy, Clone)]
 pub struct Block {
     block_type: BlockType,
@@ -41,9 +42,8 @@ pub async fn run() {
             Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion{ delta, },
                 .. // We're not using device_id currently
-            } => if state.mouse_pressed {
-                state.camera_controller.process_mouse(delta.0, delta.1)
-            }
+            } => 
+                state.player.process_mouse(delta.0, delta.1),
             // UPDATED!
             Event::WindowEvent {
                 ref event,

@@ -12,7 +12,7 @@ use winit::{
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-use crate::{camera, texture, Block, BlockType, Chunk};
+use crate::{camera, player::Player, texture, Block, BlockType, Chunk};
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -76,14 +76,13 @@ pub struct State {
     render_pipeline: wgpu::RenderPipeline,
     camera: camera::Camera,
     projection: camera::Projection,
-    pub camera_controller: camera::CameraController,
+    pub player: Player,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
     depth_texture: texture::Texture,
     window: Window,
     texture_bind_group: wgpu::BindGroup,
-    pub mouse_pressed: bool,
 }
 
 impl State {
@@ -98,21 +97,23 @@ impl State {
         }
 
         let event_loop = EventLoop::new();
-        let title = env!("CARGO_PKG_NAME");
         let monitor = event_loop.primary_monitor().unwrap();
         let video_mode = monitor.video_modes().next();
         let size = video_mode
             .clone()
             .map_or(PhysicalSize::new(800, 600), |vm| vm.size());
         let window = WindowBuilder::new()
-            .with_visible(false)
-            .with_title(title)
+            .with_title("WGPUCraft")
             .with_fullscreen(video_mode.map(|vm| Fullscreen::Exclusive(vm)))
             .build(&event_loop)
             .unwrap();
+
         if window.fullscreen().is_none() {
             window.set_inner_size(PhysicalSize::new(512, 512));
         }
+
+        window.set_cursor_visible(false);
+
         #[cfg(target_arch = "wasm32")]
         {
             use winit::platform::web::WindowExtWebSys;
@@ -128,6 +129,23 @@ impl State {
                         Ok(_) => {}
                         Err(_) => (),
                     }
+                    let canvas_two = canvas.clone();
+                    let closure = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+                        // Request pointer lock
+                        canvas_two.request_pointer_lock();
+
+                        // Handle other mouse events here
+                    }) as Box<dyn FnMut(_)>);
+
+                    // Attach the event handler to the canvas
+                    canvas
+                        .add_event_listener_with_callback(
+                            "mousedown",
+                            closure.as_ref().unchecked_ref(),
+                        )
+                        .expect("Failed to add event listener");
+
+                    closure.forget();
 
                     Some(())
                 })
@@ -147,7 +165,25 @@ impl State {
         // The surface needs to live as long as the window that created it.
         // State owns the window so this should be safe.
         let surface = unsafe { instance.create_surface(&window) }.unwrap();
-
+        window.set_visible(true);
+        #[cfg(any(target_arch = "wasm32", target_os = "macos"))]
+        {
+            match window.set_cursor_grab(winit::window::CursorGrabMode::Locked) {
+                Ok(()) => {}
+                Err(error) => {
+                    println!("Error occurred: {:?}", error);
+                }
+            }
+        }
+        #[cfg(not(any(target_arch = "wasm32", target_os = "macos")))]
+        {
+            match window.set_cursor_grab(winit::window::CursorGrabMode::Confined) {
+                Ok(()) => {}
+                Err(error) => {
+                    println!("Error occurred: {:?}", error);
+                }
+            }
+        }
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
@@ -245,7 +281,7 @@ impl State {
         let camera = camera::Camera::new((0.0, 5.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
         let projection =
             camera::Projection::new(config.width, config.height, cgmath::Deg(45.0), 0.1, 100.0);
-        let camera_controller = camera::CameraController::new(30.0, 1.0);
+        let player = Player::new(30.0, 1.0);
 
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera, &projection);
@@ -345,7 +381,7 @@ impl State {
             // indicates how many array layers the attachments will have.
             multiview: None,
         });
-        window.set_visible(true);
+
         (
             Self {
                 surface,
@@ -356,14 +392,13 @@ impl State {
                 render_pipeline,
                 camera,
                 projection,
-                camera_controller,
+                player,
                 camera_buffer,
                 camera_bind_group,
                 camera_uniform,
                 depth_texture,
                 window,
                 texture_bind_group: diffuse_bind_group,
-                mouse_pressed: false,
             },
             event_loop,
         )
@@ -393,24 +428,16 @@ impl State {
                         ..
                     },
                 ..
-            } => self.camera_controller.process_keyboard(*key, *state),
+            } => self.player.process_keyboard(*key, *state),
             WindowEvent::MouseWheel { delta, .. } => {
-                self.camera_controller.process_scroll(delta);
-                true
-            }
-            WindowEvent::MouseInput {
-                button: MouseButton::Left,
-                state,
-                ..
-            } => {
-                self.mouse_pressed = *state == ElementState::Pressed;
+                self.player.process_scroll(delta);
                 true
             }
             _ => false,
         }
     }
     pub fn update(&mut self, dt: std::time::Duration) {
-        self.camera_controller.update_camera(&mut self.camera, dt);
+        self.player.update_camera(&mut self.camera, dt);
         self.camera_uniform
             .update_view_proj(&self.camera, &self.projection);
         self.queue.write_buffer(
